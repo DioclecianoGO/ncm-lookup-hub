@@ -26,6 +26,10 @@ const Index = () => {
     setCurrentResult({ ncm, data });
   };
 
+  const handleDeleteHistory = (id: string) => {
+    setHistory((prev) => prev.filter((entry) => entry.id !== id));
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -77,7 +81,7 @@ const Index = () => {
           {/* History */}
           {history.length > 0 && (
             <section className="border-t pt-8">
-              <SearchHistory entries={history} />
+              <SearchHistory entries={history} onDelete={handleDeleteHistory} />
             </section>
           )}
         </div>
