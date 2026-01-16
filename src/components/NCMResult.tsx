@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Package, FileText, AlertTriangle, CheckCircle } from "lucide-react";
+import { Package, FileText, X, Check, AlertTriangle } from "lucide-react";
 
 interface NCMResultProps {
   data: unknown[];
@@ -66,16 +66,19 @@ export function NCMResult({ data }: NCMResultProps) {
                 )}
                 {outraLicenca && (
                   <div className="col-span-full">
-                    <div className="flex items-center gap-2">
-                      {outraLicenca === "S" ? (
-                        <AlertTriangle className="w-4 h-4 text-warning" />
-                      ) : (
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                      )}
+                    <div className="flex items-center gap-3">
                       <span className="text-sm font-medium text-muted-foreground">Outra Licença Necessária:</span>
-                      <span className={outraLicenca === "S" ? "text-warning font-medium" : "text-green-600 font-medium"}>
-                        {outraLicenca === "S" ? "Sim - Requer licença de outro órgão" : "Não"}
-                      </span>
+                      {outraLicenca === "S" ? (
+                        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-destructive/10 border border-destructive/20">
+                          <X className="w-4 h-4 text-destructive" />
+                          <span className="text-destructive font-medium text-sm">Sim - Requer licença de outro órgão</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+                          <Check className="w-4 h-4 text-green-600" />
+                          <span className="text-green-600 font-medium text-sm">Não</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
