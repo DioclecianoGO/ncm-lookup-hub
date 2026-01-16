@@ -9,14 +9,28 @@ const Index = () => {
   const [history, setHistory] = useState<SearchEntry[]>([]);
 
   const handleResult = (ncm: string, data: unknown[]) => {
+    // Extract product name and lista from first result
+    const extractInfo = (resultData: unknown[]) => {
+      if (resultData && resultData.length > 0) {
+        const firstItem = resultData[0] as { tipoProduto?: { descricao?: string; tipoLista?: string }; tipoNcm?: { descricao?: string } };
+        const productName = firstItem.tipoProduto?.descricao || firstItem.tipoNcm?.descricao;
+        const tipoLista = firstItem.tipoProduto?.tipoLista;
+        return { productName, tipoLista };
+      }
+      return { productName: undefined, tipoLista: undefined };
+    };
+
     // Move current result to history if exists
     if (currentResult) {
+      const { productName, tipoLista } = extractInfo(currentResult.data);
       setHistory((prev) => [
         {
           id: crypto.randomUUID(),
           ncm: currentResult.ncm,
           data: currentResult.data,
           timestamp: new Date(),
+          productName,
+          tipoLista,
         },
         ...prev,
       ]);

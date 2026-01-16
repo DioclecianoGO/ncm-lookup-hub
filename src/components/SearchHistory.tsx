@@ -9,6 +9,8 @@ export interface SearchEntry {
   ncm: string;
   data: unknown[];
   timestamp: Date;
+  productName?: string;
+  tipoLista?: string;
 }
 
 type SortMode = "chronological" | "ncm";
@@ -17,6 +19,19 @@ interface SearchHistoryProps {
   entries: SearchEntry[];
   onDelete?: (id: string) => void;
 }
+
+const getListaDescription = (tipoLista: string) => {
+  const listas: Record<string, string> = {
+    "1": "Lista 1",
+    "2": "Lista 2",
+    "3": "Lista 3",
+    "4": "Lista 4",
+    "5": "Lista 5",
+    "6": "Lista 6",
+    "7": "Lista 7",
+  };
+  return listas[tipoLista] || `Lista ${tipoLista}`;
+};
 
 export function SearchHistory({ entries, onDelete }: SearchHistoryProps) {
   const [openItems, setOpenItems] = useState<Set<string>>(new Set());
@@ -86,9 +101,19 @@ export function SearchHistory({ entries, onDelete }: SearchHistoryProps) {
                   variant="ghost"
                   className="flex-1 justify-between h-auto py-3 px-4 bg-muted/50 hover:bg-muted"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <Hash className="w-4 h-4 text-primary" />
                     <span className="font-mono font-medium">{entry.ncm}</span>
+                    {entry.productName && (
+                      <span className="text-foreground text-sm font-medium truncate max-w-[200px]" title={entry.productName}>
+                        {entry.productName}
+                      </span>
+                    )}
+                    {entry.tipoLista && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                        {getListaDescription(entry.tipoLista)}
+                      </span>
+                    )}
                     <span className="text-muted-foreground text-sm">
                       ({Array.isArray(entry.data) ? entry.data.length : 1} resultado
                       {(Array.isArray(entry.data) ? entry.data.length : 1) !== 1 ? "s" : ""})
