@@ -1,1 +1,4 @@
 project_id = "tjsjghtrfpqezgwgjbis"
+
+[functions.consulta-ncm]
+verify_jwt = false
