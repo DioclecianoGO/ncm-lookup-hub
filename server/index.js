@@ -12,6 +12,9 @@ app.use(express.json());
 // Servir arquivos estáticos do frontend (pasta "public" = build do React)
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Health check
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
 // ========================
 // API - Consulta NCM
 // ========================

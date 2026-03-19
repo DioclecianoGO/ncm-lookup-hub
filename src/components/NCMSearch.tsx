@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-// Para self-hosted: usa "/api/consulta-ncm" (mesmo servidor)
-// Para Lovable Cloud: usa a edge function via Supabase client
-const API_URL = import.meta.env.VITE_API_URL || "/api/consulta-ncm";
+// Self-hosted: usa caminho relativo (funciona com qualquer subpath via Nginx proxy)
+// Lovable Cloud: usa edge function via Supabase
+const API_URL = import.meta.env.VITE_API_URL || "api/consulta-ncm";
 const USE_SUPABASE = import.meta.env.VITE_USE_SUPABASE === "true";
 
 interface NCMSearchProps {

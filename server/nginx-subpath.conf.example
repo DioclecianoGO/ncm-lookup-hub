@@ -1,0 +1,35 @@
+# =============================================
+# Configuração Nginx para lab.intruser.cloud/ccpf
+# Adicione este bloco DENTRO do seu server {} existente
+# =============================================
+
+# Proxy para o container Docker do Consulta NCM
+location /ccpf/ {
+    proxy_pass http://127.0.0.1:3001/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_cache_bypass $http_upgrade;
+}
+
+# Caso você NÃO tenha um server block para lab.intruser.cloud ainda:
+#
+# server {
+#     listen 80;
+#     server_name lab.intruser.cloud;
+#
+#     # Seus outros sites/locations aqui...
+#
+#     location /ccpf/ {
+#         proxy_pass http://127.0.0.1:3001/;
+#         proxy_http_version 1.1;
+#         proxy_set_header Host $host;
+#         proxy_set_header X-Real-IP $remote_addr;
+#         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#         proxy_set_header X-Forwarded-Proto $scheme;
+#     }
+# }
