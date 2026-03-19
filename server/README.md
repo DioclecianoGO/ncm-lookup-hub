@@ -1,81 +1,89 @@
-# Consulta NCM - Self-Hosted
+# Consulta NCM - Self-Hosted com Docker
+
+## Estrutura: `lab.intruser.cloud/ccpf`
 
 ## Pré-requisitos
-- Node.js 18+ (`curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - && sudo apt install nodejs`)
-- Nginx (já instalado no seu servidor)
+- Docker e Docker Compose instalados
+- Nginx já configurado para `lab.intruser.cloud`
 
 ## Deploy Passo a Passo
 
-### 1. Build do Frontend
-No diretório raiz do projeto:
+### 1. Build do Frontend (na sua máquina local)
 ```bash
+# No diretório raiz do projeto
 npm install
 npm run build
 ```
-Isso gera a pasta `dist/` com os arquivos estáticos.
 
-### 2. Preparar o Servidor
+### 2. Copiar arquivos para o servidor
 ```bash
-# Criar diretório no servidor
-sudo mkdir -p /var/www/consulta-ncm
+# Copiar pasta server/ para o servidor
+scp -r server/ usuario@lab.intruser.cloud:/opt/consulta-ncm/
 
-# Copiar a pasta server/ e o build
-scp -r server/ usuario@seuservidor:/var/www/consulta-ncm/
-scp -r dist/ usuario@seuservidor:/var/www/consulta-ncm/server/public
+# Copiar o build do frontend para dentro de server/public
+scp -r dist/* usuario@lab.intruser.cloud:/opt/consulta-ncm/public/
 ```
 
-### 3. Instalar Dependências no Servidor
+### 3. No servidor: subir o container
 ```bash
-cd /var/www/consulta-ncm/server
-npm install --production
+cd /opt/consulta-ncm
+docker compose up -d --build
 ```
 
-### 4. Rodar com PM2 (processo em background)
-```bash
-# Instalar PM2 globalmente
-sudo npm install -g pm2
+### 4. Configurar Nginx (subpath /ccpf)
+Adicione ao seu `server {}` existente de `lab.intruser.cloud`:
 
-# Iniciar o servidor
-cd /var/www/consulta-ncm/server
-pm2 start index.js --name consulta-ncm
-pm2 save
-pm2 startup  # para iniciar automaticamente no boot
+```nginx
+location /ccpf/ {
+    proxy_pass http://127.0.0.1:3001/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_cache_bypass $http_upgrade;
+}
 ```
 
-### 5. Configurar Nginx
 ```bash
-# Copiar configuração
-sudo cp nginx.conf.example /etc/nginx/sites-available/consulta-ncm
-sudo ln -s /etc/nginx/sites-available/consulta-ncm /etc/nginx/sites-enabled/
-
-# Editar o server_name com seu domínio
-sudo nano /etc/nginx/sites-available/consulta-ncm
-
-# Testar e reiniciar
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### 6. HTTPS com Certbot (opcional mas recomendado)
+### 5. Testar
+Acesse: `https://lab.intruser.cloud/ccpf`
+
+## Comandos Úteis
 ```bash
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d seudominio.com.br
+docker compose logs -f        # Ver logs em tempo real
+docker compose restart         # Reiniciar
+docker compose down            # Parar
+docker compose up -d --build   # Rebuild após mudanças
 ```
 
-## Estrutura Final no Servidor
+## Estrutura no Servidor
 ```
-/var/www/consulta-ncm/server/
-├── index.js          # Servidor Node.js (API + static)
+/opt/consulta-ncm/
+├── Dockerfile
+├── docker-compose.yml
+├── index.js
 ├── package.json
-├── nginx.conf.example
-└── public/           # Build do React (conteúdo da pasta dist/)
+└── public/          # Build do React (conteúdo da pasta dist/)
     ├── index.html
     └── assets/
 ```
 
-## Comandos Úteis
+## Atualizar
 ```bash
-pm2 logs consulta-ncm    # Ver logs
-pm2 restart consulta-ncm # Reiniciar
-pm2 status               # Status dos processos
+# Na máquina local: rebuild
+npm run build
+
+# Copiar novo build
+scp -r dist/* usuario@lab.intruser.cloud:/opt/consulta-ncm/public/
+
+# No servidor: rebuild container
+cd /opt/consulta-ncm
+docker compose up -d --build
 ```
