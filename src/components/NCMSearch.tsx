@@ -2,8 +2,12 @@ import { useState, FormEvent, KeyboardEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+// Para self-hosted: usa "/api/consulta-ncm" (mesmo servidor)
+// Para Lovable Cloud: usa a edge function via Supabase client
+const API_URL = import.meta.env.VITE_API_URL || "/api/consulta-ncm";
+const USE_SUPABASE = import.meta.env.VITE_USE_SUPABASE === "true";
 
 interface NCMSearchProps {
   onResult: (ncm: string, data: unknown[]) => void;
@@ -26,19 +30,30 @@ export function NCMSearch({ onResult }: NCMSearchProps) {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("consulta-ncm", {
-        body: { ncm },
-      });
+      let results: unknown[];
 
-      if (error) {
-        throw new Error(error.message);
+      if (USE_SUPABASE) {
+        // Modo Lovable Cloud (Edge Function)
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data, error } = await supabase.functions.invoke("consulta-ncm", {
+          body: { ncm },
+        });
+        if (error) throw new Error(error.message);
+        if (data.error) throw new Error(data.error);
+        results = Array.isArray(data) ? data : [data];
+      } else {
+        // Modo Self-Hosted (API local)
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ncm }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Erro na consulta");
+        if (data.error) throw new Error(data.error);
+        results = Array.isArray(data) ? data : [data];
       }
 
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      const results = Array.isArray(data) ? data : [data];
       onResult(ncm, results);
       setNcm("");
       toast.success(`Consulta realizada: ${results.length} resultado(s)`);
