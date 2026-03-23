@@ -1,73 +1,116 @@
-# Welcome to your Lovable project
+# Consulta NCM PF
 
-## Project info
+Ferramenta web para consulta de NCM, com interface em React/Vite e opção de execução self-hosted com backend Node.js/Express.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Objetivo
 
-## How can I edit this code?
+A aplicação foi construída para apoiar consultas e conferências internas de NCM em ambiente de laboratório, com uma interface simples para pesquisa e uma API própria para operação self-hosted.
 
-There are several ways of editing your application.
+## Principais recursos
 
-**Use Lovable**
+- consulta de NCM por código de 8 dígitos;
+- frontend em React + Vite;
+- backend self-hosted em Node.js + Express;
+- endpoint de health check para validação operacional;
+- possibilidade de publicação atrás de reverse proxy (ex.: Nginx/Hestia).
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Tecnologias utilizadas
 
-Changes made via Lovable will be committed automatically to this repo.
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- shadcn/ui
+- Node.js
+- Express
+- Docker
 
-**Use your preferred IDE**
+## Estrutura do repositório
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```text
+.
+├── src/                 # frontend React/Vite
+├── public/              # ativos estáticos do frontend
+├── server/              # backend self-hosted
+├── supabase/            # artefatos do modo Lovable/Supabase
+├── index.html           # documento base do frontend
+└── package.json         # dependências e scripts da aplicação
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Desenvolvimento local
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+A aplicação será disponibilizada localmente pelo Vite em modo de desenvolvimento.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Build do frontend
 
-**Use GitHub Codespaces**
+```bash
+npm install
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+O build gerado será criado na pasta `dist/`.
 
-## What technologies are used for this project?
+## Execução self-hosted
 
-This project is built with:
+O modo self-hosted utiliza o backend da pasta `server/` para servir os arquivos estáticos do frontend e expor a API.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Fluxo resumido:
 
-## How can I deploy this project?
+1. gerar o build do frontend na raiz do projeto;
+2. copiar o conteúdo de `dist/` para `server/public/`;
+3. subir o backend self-hosted.
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Exemplo resumido:
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+npm install
+npm run build
+rsync -a dist/ server/public/
+cd server
+npm install
+npm start
+```
 
-Yes, you can!
+## Docker
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+O diretório `server/` contém os artefatos necessários para execução via Docker em ambiente self-hosted.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Exemplo:
+
+```bash
+cd server
+docker compose up -d --build
+```
+
+## Deploy
+
+A publicação self-hosted pode ser feita atrás de reverse proxy, com frontend servido estaticamente e rotas de API encaminhadas ao backend Node.js.
+
+Para instruções mais específicas de implantação do servidor self-hosted, consulte:
+
+- [`server/README.md`](server/README.md)
+
+## Health check
+
+A aplicação self-hosted expõe o endpoint:
+
+```text
+/health
+```
+
+Resposta esperada:
+
+```json
+{"status":"ok"}
+```
+
+## Observações
+
+- o projeto foi inicialmente estruturado a partir de um fluxo gerado no Lovable, mas o repositório pode ser mantido e evoluído de forma independente;
+- metadados sociais e branding do frontend podem ser ajustados conforme o ambiente de publicação;
+- para ambientes públicos, recomenda-se uso de HTTPS válido e reverse proxy com controles mínimos de exposição.
