@@ -1,10 +1,10 @@
 # Consulta NCM PF
 
-Ferramenta web para consulta de NCM, com interface em React/Vite e opção de execução self-hosted com backend Node.js/Express.
+Ferramenta web para consulta de NCM, com frontend em React/Vite e opção de execução self-hosted com backend Node.js/Express.
 
 ## Objetivo
 
-A aplicação foi construída para apoiar consultas e conferências internas de NCM em ambiente de laboratório, com uma interface simples para pesquisa e uma API própria para operação self-hosted.
+A aplicação foi construída para apoiar consultas e conferências internas de NCM em ambiente de laboratório, com interface simples para pesquisa e API própria para operação self-hosted.
 
 ## Principais recursos
 
@@ -12,7 +12,7 @@ A aplicação foi construída para apoiar consultas e conferências internas de 
 - frontend em React + Vite;
 - backend self-hosted em Node.js + Express;
 - endpoint de health check para validação operacional;
-- possibilidade de publicação atrás de reverse proxy (ex.: Nginx/Hestia).
+- publicação atrás de reverse proxy (ex.: Nginx/Hestia).
 
 ## Tecnologias utilizadas
 
@@ -44,60 +44,55 @@ npm install
 npm run dev
 ```
 
-A aplicação será disponibilizada localmente pelo Vite em modo de desenvolvimento.
+## Fluxo de trabalho
 
-## Build do frontend
+### Lovable
+Use para ajustes visuais e preview rápido. As mudanças sincronizam com o GitHub na branch padrão.
 
-```bash
-npm install
-npm run build
-```
+### GitHub
+Use para versionamento, documentação e alterações manuais em frontend e backend.
 
-O build gerado será criado na pasta `dist/`.
+### Servidor self-hosted
+O deploy no VPS não é automático. Depois de mudanças no Lovable ou no GitHub, o servidor precisa ser atualizado manualmente ou por CI/CD.
 
-## Execução self-hosted
+## Estado atual do laboratório
 
-O modo self-hosted utiliza o backend da pasta `server/` para servir os arquivos estáticos do frontend e expor a API.
+- hostname: `ncm.lab.intruser.cloud`;
+- frontend estático servido pelo Hestia/Nginx em `public_html`;
+- backend self-hosted em container Docker escutando em `127.0.0.1:3001`;
+- proxy reverso para `/api/` e `/health` via Nginx/Hestia;
+- DNS do hostname em modo `DNS only`.
 
-Fluxo resumido:
-
-1. gerar o build do frontend na raiz do projeto;
-2. copiar o conteúdo de `dist/` para `server/public/`;
-3. subir o backend self-hosted.
-
-Exemplo resumido:
+## Atualização do servidor após mudanças no frontend
 
 ```bash
-npm install
-npm run build
-rsync -a dist/ server/public/
-cd server
-npm install
-npm start
+cd /opt/ncm-lookup-hub/current/src
+git pull origin main
+
+docker run --rm \
+  -v /opt/ncm-lookup-hub/current/src:/app \
+  -w /app \
+  node:20-bookworm \
+  bash -lc 'npm install && npm run build'
+
+rsync -a --delete /opt/ncm-lookup-hub/current/src/dist/ /opt/ncm-lookup-hub/current/app/public/
+rsync -a --delete /opt/ncm-lookup-hub/current/app/public/ /home/user/web/ncm.lab.intruser.cloud/public_html/
 ```
 
-## Docker
+## Importante
 
-O diretório `server/` contém os artefatos necessários para execução via Docker em ambiente self-hosted.
-
-Exemplo:
-
-```bash
-cd server
-docker compose up -d --build
-```
+- alterações somente de frontend normalmente não exigem rebuild do container no ambiente atual;
+- alterações no backend (`server/index.js`, `server/package.json`, `Dockerfile`, `docker-compose.yml`) exigem rebuild do serviço Docker.
 
 ## Deploy
 
-A publicação self-hosted pode ser feita atrás de reverse proxy, com frontend servido estaticamente e rotas de API encaminhadas ao backend Node.js.
-
-Para instruções mais específicas de implantação do servidor self-hosted, consulte:
+Para instruções específicas do modo self-hosted, consulte:
 
 - [`server/README.md`](server/README.md)
 
 ## Health check
 
-A aplicação self-hosted expõe o endpoint:
+Endpoint exposto pela aplicação self-hosted:
 
 ```text
 /health
@@ -108,9 +103,3 @@ Resposta esperada:
 ```json
 {"status":"ok"}
 ```
-
-## Observações
-
-- o projeto foi inicialmente estruturado a partir de um fluxo gerado no Lovable, mas o repositório pode ser mantido e evoluído de forma independente;
-- metadados sociais e branding do frontend podem ser ajustados conforme o ambiente de publicação;
-- para ambientes públicos, recomenda-se uso de HTTPS válido e reverse proxy com controles mínimos de exposição.
